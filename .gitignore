@@ -1,0 +1,79 @@
+# ── Environment & secrets ─────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+
+# ── Node.js ───────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npm/
+
+# ── Next.js ───────────────────────────────────────────────────
+pulseRewards/frontend/.next/
+pulseRewards/frontend/out/
+
+# ── TypeScript ────────────────────────────────────────────────
+*.tsbuildinfo
+dist/
+build/
+
+# ── Rust / Cargo ──────────────────────────────────────────────
+target/
+Cargo.lock        # keep for binaries; contracts are a workspace binary
+**/*.wasm.gz
+
+# ── Testing ───────────────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ── Docker ────────────────────────────────────────────────────
+# keep docker-compose.yml tracked; ignore local overrides
+docker-compose.override.yml
+
+# ── Terraform ─────────────────────────────────────────────────
+infra/**/.terraform/
+infra/**/*.tfstate
+infra/**/*.tfstate.backup
+infra/**/.terraform.lock.hcl
+infra/**/terraform.tfvars
+infra/**/*.auto.tfvars
+
+# ── Kubernetes / Helm ─────────────────────────────────────────
+k8s/helm/charts/*.tgz
+
+# ── macOS ─────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── Linux ─────────────────────────────────────────────────────
+*~
+.fuse_hidden*
+.Trash-*
+
+# ── Windows ───────────────────────────────────────────────────
+Thumbs.db
+Desktop.ini
+
+# ── IDE / editor ──────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# ── Logs ──────────────────────────────────────────────────────
+logs/
+*.log
+
+# ── Misc ──────────────────────────────────────────────────────
+.cache/
+tmp/
+temp/

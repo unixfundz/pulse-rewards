@@ -1,0 +1,224 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Pulse Rewards API",
+    "description": "REST API for the Pulse Rewards blockchain loyalty platform.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Pulse Rewards",
+      "url": "https://github.com/unixfundz/pulse-rewards"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0"
+    }
+  },
+  "servers": [
+    { "url": "http://localhost:3001", "description": "Local dev" },
+    { "url": "https://api.pulse-rewards.io", "description": "Production" }
+  ],
+  "security": [],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id":         { "type": "string", "format": "uuid" },
+          "email":      { "type": "string", "format": "email" },
+          "role":       { "type": "string", "enum": ["user","merchant","admin"] },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Campaign": {
+        "type": "object",
+        "properties": {
+          "id":          { "type": "string", "format": "uuid" },
+          "merchant_id": { "type": "string", "format": "uuid" },
+          "name":        { "type": "string" },
+          "description": { "type": "string" },
+          "reward_rate": { "type": "number" },
+          "starts_at":   { "type": "string", "format": "date-time" },
+          "ends_at":     { "type": "string", "format": "date-time" },
+          "status":      { "type": "string", "enum": ["active","inactive","expired"] }
+        }
+      },
+      "Reward": {
+        "type": "object",
+        "properties": {
+          "id":             { "type": "string", "format": "uuid" },
+          "campaign_id":    { "type": "string", "format": "uuid" },
+          "amount":         { "type": "number" },
+          "wallet_address": { "type": "string" },
+          "status":         { "type": "string", "enum": ["pending","confirmed","failed"] },
+          "tx_hash":        { "type": "string" },
+          "created_at":     { "type": "string", "format": "date-time" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status":    { "type": "string" },
+                    "timestamp": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "operationId": "register",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email","password"],
+                "properties": {
+                  "email":    { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 8 },
+                  "role":     { "type": "string", "enum": ["user","merchant"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created" },
+          "400": { "description": "Validation error" },
+          "409": { "description": "Email already registered" }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Log in",
+        "operationId": "login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email","password"],
+                "properties": {
+                  "email":    { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful, returns tokens" },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/api/campaigns": {
+      "get": {
+        "summary": "List active campaigns",
+        "operationId": "listCampaigns",
+        "responses": {
+          "200": {
+            "description": "List of campaigns",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "campaigns": { "type": "array", "items": { "$ref": "#/components/schemas/Campaign" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a campaign (merchant only)",
+        "operationId": "createCampaign",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name","reward_rate","starts_at","ends_at"],
+                "properties": {
+                  "name":        { "type": "string" },
+                  "description": { "type": "string" },
+                  "reward_rate": { "type": "number" },
+                  "starts_at":   { "type": "string", "format": "date-time" },
+                  "ends_at":     { "type": "string", "format": "date-time" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Campaign created" },
+          "400": { "description": "Validation error" },
+          "403": { "description": "Not a merchant account" }
+        }
+      }
+    },
+    "/api/rewards/claim": {
+      "post": {
+        "summary": "Claim a reward",
+        "operationId": "claimReward",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["campaign_id","wallet_address"],
+                "properties": {
+                  "campaign_id":    { "type": "string", "format": "uuid" },
+                  "wallet_address": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": { "description": "Claim accepted (pending on-chain confirmation)" },
+          "404": { "description": "Campaign not found" },
+          "409": { "description": "Already claimed" }
+        }
+      }
+    }
+  }
+}

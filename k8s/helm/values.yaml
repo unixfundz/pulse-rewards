@@ -1,0 +1,54 @@
+replicaCount:
+  backend: 2
+  frontend: 2
+
+image:
+  registry: ghcr.io
+  org: unixfundz/pulse-rewards
+  tag: latest
+  pullPolicy: Always
+
+backend:
+  port: 3001
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+frontend:
+  port: 3000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+config:
+  stellarNetwork: mainnet
+  apiUrl: https://api.pulse-rewards.io
+
+ingress:
+  enabled: true
+  className: nginx
+  tls: true
+  hosts:
+    frontend: pulse-rewards.io
+    backend: api.pulse-rewards.io
+  clusterIssuer: letsencrypt-prod
+
+secrets:
+  # Provide these via --set or a sealed-secrets / external-secrets operator
+  databaseUrl: ""
+  redisUrl: ""
+  jwtPrivateKey: ""
+  jwtPublicKey: ""
+  fieldEncryptionKey: ""
+  stellarIssuerPublic: ""
+  stellarIssuerSecret: ""
+  stellarDistributionPublic: ""
+  stellarDistributionSecret: ""

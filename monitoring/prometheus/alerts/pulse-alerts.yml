@@ -1,0 +1,54 @@
+groups:
+  - name: pulse-rewards
+    rules:
+      - alert: BackendDown
+        expr: up{job="pulse-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pulse backend is down"
+          description: "The pulse-backend scrape target has been unreachable for 1 minute."
+
+      - alert: HighErrorRate
+        expr: |
+          rate(http_requests_total{job="pulse-backend",status=~"5.."}[5m]) /
+          rate(http_requests_total{job="pulse-backend"}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API error rate (>5%)"
+          description: "Error rate is {{ printf \"%.1f\" $value | humanizePercentage }} over the last 5 minutes."
+
+      - alert: SlowAPIResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="pulse-backend"}[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "95th-percentile API response time > 2s"
+
+      - alert: PostgresDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL exporter is down"
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis exporter is down"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memory usage above 90%"

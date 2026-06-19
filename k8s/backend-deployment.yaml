@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pulse-backend
+  labels:
+    app: pulse-backend
+    component: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pulse-backend
+  template:
+    metadata:
+      labels:
+        app: pulse-backend
+        component: backend
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+      containers:
+        - name: backend
+          image: ghcr.io/unixfundz/pulse-rewards/backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3001
+              name: http
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3001"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: pulse-secrets
+                  key: database-url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: pulse-secrets
+                  key: redis-url
+            - name: JWT_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pulse-secrets
+                  key: jwt-private-key
+            - name: JWT_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pulse-secrets
+                  key: jwt-public-key
+            - name: FIELD_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pulse-secrets
+                  key: field-encryption-key
+            - name: ISSUER_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: pulse-secrets
+                  key: stellar-issuer-secret
+            - name: ISSUER_PUBLIC
+              valueFrom:
+                secretKeyRef:
+                  name: pulse-secrets
+                  key: stellar-issuer-public
+            - name: DISTRIBUTION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: pulse-secrets
+                  key: stellar-distribution-secret
+            - name: DISTRIBUTION_PUBLIC
+              valueFrom:
+                secretKeyRef:
+                  name: pulse-secrets
+                  key: stellar-distribution-public
+            - name: STELLAR_NETWORK
+              valueFrom:
+                configMapKeyRef:
+                  name: pulse-config
+                  key: stellar-network
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+      restartPolicy: Always

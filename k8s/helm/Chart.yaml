@@ -1,0 +1,15 @@
+apiVersion: v2
+name: pulse-rewards
+description: Helm chart for Pulse Rewards — blockchain loyalty platform on Stellar
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - stellar
+  - soroban
+  - loyalty
+  - rewards
+  - blockchain
+maintainers:
+  - name: Pulse Rewards Contributors
+    url: https://github.com/unixfundz/pulse-rewards

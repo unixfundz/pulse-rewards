@@ -1,0 +1,116 @@
+version: "3.9"
+
+services:
+  # ── PostgreSQL ───────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pulse}
+      POSTGRES_DB: ${POSTGRES_DB:-pulse_rewards}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pulse}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Stellar standalone node ──────────────────────────────────
+  stellar:
+    image: stellar/quickstart:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - ENABLE_SOROBAN_RPC=true
+      - NETWORK=local
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ── Backend ──────────────────────────────────────────────────
+  backend:
+    build:
+      context: pulseRewards/backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: pulseRewards/.env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-pulse}:${POSTGRES_PASSWORD:-pulse}@postgres:5432/${POSTGRES_DB:-pulse_rewards}
+      - REDIS_URL=redis://redis:6379
+      - STELLAR_RPC_URL=http://stellar:8000/rpc
+      - STELLAR_NETWORK=${STELLAR_NETWORK:-local}
+      - PORT=3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:3001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    volumes:
+      - ./pulseRewards/backend:/app
+      - /app/node_modules
+
+  # ── Frontend ─────────────────────────────────────────────────
+  frontend:
+    build:
+      context: pulseRewards/frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: pulseRewards/.env
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_STELLAR_NETWORK=${STELLAR_NETWORK:-local}
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./pulseRewards/frontend:/app
+      - /app/node_modules
+      - /app/.next
+
+  # ── Nginx reverse proxy ──────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:

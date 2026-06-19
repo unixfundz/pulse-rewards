@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --pulse-primary: #4f6ef7;
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--pulse-primary);
+    outline-offset: 2px;
+  }
+}
