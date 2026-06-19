@@ -2,8 +2,11 @@
 
 [![CI](https://github.com/unixfundz/pulse-rewards/actions/workflows/ci.yml/badge.svg)](https://github.com/unixfundz/pulse-rewards/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![WCAG 2.1 AA](https://img.shields.io/badge/WCAG-2.1_AA-green.svg)](docs/security/accessibility.md)
+[![WCAG 2.1 AA](https://img.shields.io/badge/WCAG-2.1_AA-green.svg)](docs/security/README.md)
 [![Stellar](https://img.shields.io/badge/Stellar-Soroban-7C3AED.svg)](https://stellar.org)
+[![Node.js](https://img.shields.io/badge/Node.js-20_LTS-339933.svg)](https://nodejs.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1.svg)](https://postgresql.org)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)](docker-compose.yml)
 
 **A blockchain-powered loyalty platform that lets businesses issue tokenized rewards on the Stellar network.**
 
